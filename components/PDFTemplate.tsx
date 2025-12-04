@@ -302,7 +302,7 @@ export const AssessmentPDFDocument: React.FC<PDFTemplateProps> = ({ result }) =>
               Dual State Cue
             </Text>
             <Text style={[styles.highlightText, { fontStyle: 'italic' }]}>
-              "{interpretation.dualStateCue}"
+              &ldquo;{interpretation.dualStateCue}&rdquo;
             </Text>
           </View>
         )}
