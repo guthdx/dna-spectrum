@@ -1,0 +1,25 @@
+/home/guthdx/dna-spectrum-app/logs/*.log {
+    daily
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0644 guthdx guthdx
+    sharedscripts
+    postrotate
+        # Send signal to processes if needed (not required for append-only logs)
+    endscript
+}
+
+# Docker container logs
+/var/lib/docker/containers/*/*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    maxsize 100M
+}

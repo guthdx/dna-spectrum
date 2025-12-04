@@ -165,6 +165,20 @@ npm start
 
 ## Deployment
 
+### Production Infrastructure
+
+For production deployment on Ubuntu server (192.168.11.20), see **[INFRASTRUCTURE.md](INFRASTRUCTURE.md)** for:
+
+- ✅ **Automated database backups** (daily, 30-day retention)
+- ✅ **Health monitoring** (every 10 minutes with alerting)
+- ✅ **Security hardening** (application user, network security)
+- ✅ **Systemd service** (auto-restart on failure)
+- ✅ **Log rotation** (30-day retention)
+- ✅ **Disaster recovery** (restore scripts)
+- ✅ **Cloudflare tunnel setup** (for dna.iyeska.net)
+
+**Database Server**: `postgresql://postgres:PASSWORD@192.168.11.20:5432/dna_spectrum` (NetBird VPN required)
+
 ### Docker Compose (Recommended)
 
 ```bash
@@ -180,12 +194,15 @@ docker-compose down
 
 ### Environment Variables
 
-Create a `.env` file:
+Create a `.env.local` file (Next.js on Mac):
 
 ```env
-DATABASE_URL=postgresql://user:password@host:5432/dna_spectrum
-NEXT_PUBLIC_APP_URL=https://dna.yourdomain.com
+# Use less-privileged app user for production
+DATABASE_URL=postgresql://dna_app:PASSWORD@192.168.11.20:5432/dna_spectrum
+NEXT_PUBLIC_APP_URL=https://dna.iyeska.net
 ```
+
+**Security Note**: Use the `dna_app` user (not `postgres`) for production. See [INFRASTRUCTURE.md](INFRASTRUCTURE.md#security-hardening) for setup.
 
 ## Roadmap
 
