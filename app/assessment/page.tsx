@@ -121,7 +121,7 @@ export default function AssessmentPage() {
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
                 placeholder="Enter your name"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 px-4 py-2 border"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 px-4 py-2 border text-gray-900 placeholder-gray-400"
               />
             </label>
 
