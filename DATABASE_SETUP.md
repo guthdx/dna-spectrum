@@ -244,11 +244,13 @@ ORDER BY count DESC;
 ## Next Steps
 
 After database setup:
-1. ✅ Test by taking an assessment
-2. ✅ Verify results are persisted
-3. ✅ Check assessments table has data
-4. 🔜 Set up coach authentication
-5. 🔜 Build coach dashboard
+1. ✅ Database running on 192.168.11.20 (Docker)
+2. ✅ Schema applied successfully
+3. ✅ Connection verified from development machine
+4. 🔜 Test by taking an assessment
+5. 🔜 Verify results are persisted to database
+6. 🔜 Set up coach authentication
+7. 🔜 Build coach dashboard
 
 ---
 
