@@ -13,21 +13,49 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
-  // For now, we'll get the result from sessionStorage since we don't have a database yet
-  // TODO: Replace with API call when database is connected
   useEffect(() => {
-    try {
-      const storedResult = sessionStorage.getItem(`assessment-${id}`);
-      if (storedResult) {
-        setResult(JSON.parse(storedResult));
-      } else {
-        setError('Assessment not found');
+    const fetchAssessment = async () => {
+      try {
+        // Try to fetch from database API first
+        const response = await fetch(`/api/assessment/${id}`);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setResult(data.data);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fallback to sessionStorage if database fetch fails
+        console.log('Database fetch failed, trying sessionStorage...');
+        const storedResult = sessionStorage.getItem(`assessment-${id}`);
+        if (storedResult) {
+          setResult(JSON.parse(storedResult));
+        } else {
+          setError('Assessment not found');
+        }
+      } catch (err) {
+        console.error('Error loading assessment:', err);
+
+        // Try sessionStorage as final fallback
+        try {
+          const storedResult = sessionStorage.getItem(`assessment-${id}`);
+          if (storedResult) {
+            setResult(JSON.parse(storedResult));
+          } else {
+            setError('Failed to load assessment results');
+          }
+        } catch (storageErr) {
+          setError('Failed to load assessment results');
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError('Failed to load assessment results');
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    fetchAssessment();
   }, [id]);
 
   if (loading) {

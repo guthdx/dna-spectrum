@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateArchetypeScores, calculateDualStateProfile } from '@/lib/scoring';
 import { generateInterpretation } from '@/lib/profiles';
+import { saveAssessment } from '@/lib/db';
 import type {
   SubmitAssessmentRequest,
   AssessmentResult,
@@ -64,8 +65,14 @@ export async function POST(request: NextRequest) {
       completedAt: new Date(),
     };
 
-    // TODO: Save to database when PostgreSQL is connected
-    // For now, we'll store in memory/session
+    // Save to database
+    try {
+      await saveAssessment(result);
+      console.log(`✅ Assessment saved to database: ${assessmentId}`);
+    } catch (dbError) {
+      console.error('⚠️  Database save failed, continuing without persistence:', dbError);
+      // Continue anyway - the assessment still works, just won't be persisted
+    }
 
     // Return result
     return NextResponse.json({
