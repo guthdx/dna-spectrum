@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { renderToStream } from '@react-pdf/renderer';
+import { createElement } from 'react';
 import { AssessmentPDFDocument } from '@/components/PDFTemplate';
 import type { AssessmentResult } from '@/types';
 
@@ -21,7 +22,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate PDF using @react-pdf/renderer
-    const stream = await renderToStream(<AssessmentPDFDocument result={result} />);
+    const stream = await renderToStream(
+      createElement(AssessmentPDFDocument, { result })
+    );
 
     // Convert stream to buffer
     const chunks: Uint8Array[] = [];
