@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate PDF using @react-pdf/renderer (call component as function)
+    // Generate PDF using @react-pdf/renderer
     const stream = await renderToStream(
-      AssessmentPDFDocument({ result })
+      <AssessmentPDFDocument result={result} />
     );
 
     // Convert stream to buffer
