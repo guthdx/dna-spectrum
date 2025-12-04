@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dna-spectrum-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dna_spectrum_2024}
+      POSTGRES_DB: dna_spectrum
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dna_spectrum"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dna-spectrum
+
+  # Optional: PgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: dna-spectrum-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@dna-spectrum.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - dna-spectrum
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  dna-spectrum:
+    driver: bridge
