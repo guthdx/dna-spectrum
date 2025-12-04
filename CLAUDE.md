@@ -115,18 +115,26 @@ try {
 
 ### PDF Generation
 
-**CRITICAL**: Use `React.createElement()` instead of JSX syntax in `.ts` files:
+**CRITICAL**: The PDF generation route must be a `.tsx` file to use JSX syntax:
 
 ```typescript
-// ❌ WRONG - causes build error
-const stream = await renderToStream(<AssessmentPDFDocument result={result} />);
-
-// ✅ CORRECT
-import { createElement } from 'react';
+// ✅ CORRECT - app/api/pdf/generate/route.tsx (note .tsx extension)
 const stream = await renderToStream(
-  createElement(AssessmentPDFDocument, { result })
+  <AssessmentPDFDocument result={result} />
 );
+
+// Stream handling requires Buffer type conversion
+const chunks: Buffer[] = [];
+for await (const chunk of stream) {
+  chunks.push(Buffer.from(chunk));  // Explicit Buffer conversion
+}
+const buffer = Buffer.concat(chunks);
 ```
+
+**Important Type Issues**:
+- Route file must be `.tsx` (not `.ts`) to allow JSX
+- Stream chunks need `Buffer.from()` conversion
+- Use `React.ReactNode` (not `React.Node`) in layout files
 
 **PDF Structure** (components/PDFTemplate.tsx):
 - Page 1: Header + Archetype Scores + Dual State Scales
@@ -229,39 +237,70 @@ After adding questions, update `QUESTION_ARCHETYPE_MAP` at the bottom of the fil
 
 ## Deployment Architecture
 
-**Current Setup** (as of Dec 2024):
-- Dev: macOS (localhost:3001)
-- Database: PostgreSQL 16 in Docker on 192.168.11.20
-- Network: NetBird VPN (self-hosted WireGuard)
-- Future: Next.js in Docker on same server
+**Production Setup** (deployed Dec 2024):
+- **Production**: Ubuntu server at 192.168.11.20, PM2 managed, port 3001
+- **Public URL**: https://dna.iyeska.net (via Cloudflare tunnel)
+- **Database**: PostgreSQL 16 in Docker (dna-spectrum-db)
+- **Network**: NetBird VPN (self-hosted WireGuard)
+- **Dev**: macOS (localhost:3001)
 
-**Environment Variables** (.env):
+**Environment Variables**:
+
+Development (`.env`):
 ```env
 DATABASE_URL=postgresql://postgres:dna_spectrum_2024@192.168.11.20:5432/dna_spectrum
-NEXT_PUBLIC_APP_URL=http://localhost:3001  # or https://dna.iyeska.net in production
+NEXT_PUBLIC_APP_URL=http://localhost:3001
 PORT=3001
 NODE_ENV=development
 ```
 
-**Database Container** (docker-compose.yml):
+Production (`.env.local` on server):
+```env
+DATABASE_URL=postgresql://postgres:dna_spectrum_2024@localhost:5432/dna_spectrum
+NEXT_PUBLIC_APP_URL=https://dna.iyeska.net
+PORT=3001
+NODE_ENV=production
+```
+
+**Production Deployment**:
+```bash
+# On 192.168.11.20
+cd ~/dna-spectrum-app
+./scripts/deploy-nextjs.sh  # Automated deployment
+
+# PM2 process management
+pm2 logs dna-spectrum      # View logs
+pm2 restart dna-spectrum   # Restart app
+pm2 monit                  # Monitor resources
+pm2 status                 # Check all processes
+```
+
+**Database Container**:
 ```bash
 # On 192.168.11.20
 cd ~/dna-spectrum
 docker compose ps
 docker compose logs -f postgres
+
+# Check database directly
+docker exec dna-spectrum-db psql -U postgres -d dna_spectrum -c "\dt"
 ```
 
 ## Known Issues & Solutions
 
-### Build Error: "Expected '>', got 'result'"
+### Build Error: JSX Syntax Errors
 
 **Cause**: Using JSX syntax in `.ts` files (only allowed in `.tsx`)
 
-**Fix**: Use `React.createElement()` instead:
-```typescript
-import { createElement } from 'react';
-const element = createElement(Component, { prop: value });
+**Fix**: Rename file to `.tsx`:
+```bash
+mv app/api/pdf/generate/route.ts app/api/pdf/generate/route.tsx
 ```
+
+**Common JSX/TypeScript Errors**:
+- `React.Node` → Use `React.ReactNode` instead
+- Unescaped quotes in JSX → Use HTML entities (`&ldquo;` `&rdquo;`)
+- `Uint8Array[]` for stream chunks → Use `Buffer[]` with `Buffer.from()`
 
 ### Database Connection Refused
 
@@ -290,9 +329,24 @@ Results still work via sessionStorage even if database save fails.
 ## Documentation Files
 
 - **README.md** - Public-facing project overview
-- **DATABASE_SETUP.md** - Complete database setup guide with troubleshooting
 - **CLAUDE.md** - This file (architecture for Claude Code)
+- **DATABASE_SETUP.md** - Complete database setup guide with troubleshooting
+- **DEPLOYMENT.md** - Production deployment guide and PM2 management
+- **INFRASTRUCTURE.md** - Server infrastructure and automation (created by Ubuntu Claude)
+- **QUICK_REFERENCE.md** - Quick command reference guide
 - **docs/*.pdf** - Original H2 framework PDFs (reference material)
+
+## Deployment Scripts (scripts/)
+
+Created and maintained by Ubuntu Claude for production automation:
+
+- **deploy-nextjs.sh** - Automated production deployment (builds, PM2, Cloudflare)
+- **backup-database.sh** - Daily database backups (30-day retention)
+- **health-check.sh** - System health monitoring
+- **restore-database.sh** - Database restore from backup
+- **setup-cron.sh** - Automated task scheduling
+- **dna-spectrum-app.service** - Systemd service for Next.js
+- **dna-spectrum-db.service** - Systemd service for PostgreSQL
 
 ## Next.js 14 Specifics
 
